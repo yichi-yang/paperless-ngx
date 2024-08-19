@@ -1,9 +1,11 @@
 import datetime
+import importlib
 import json
 import math
 import multiprocessing
 import os
 import re
+import sys
 import tempfile
 from os import PathLike
 from pathlib import Path
@@ -1176,3 +1178,24 @@ if DEBUG:  # pragma: no cover
 # Soft Delete
 ###############################################################################
 EMPTY_TRASH_DELAY = max(__get_int("PAPERLESS_EMPTY_TRASH_DELAY", 30), 1)
+
+SHOW_DEBUG_TOOLBAR = (
+    ("test" not in sys.argv) and DEBUG and __get_boolean("PAPERLESS_DEBUG_SHOW_TOOLBAR")
+)
+
+if SHOW_DEBUG_TOOLBAR:
+    try:
+        importlib.util.find_spec("debug_toolbar")
+    except ImportError:
+        SHOW_DEBUG_TOOLBAR = False
+
+if SHOW_DEBUG_TOOLBAR:
+    INSTALLED_APPS = [
+        *INSTALLED_APPS,
+        "debug_toolbar",
+    ]
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index("django.contrib.sessions.middleware.SessionMiddleware"),
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+    )
+    INTERNAL_IPS = ["127.0.0.1"]
